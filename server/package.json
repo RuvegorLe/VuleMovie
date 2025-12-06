@@ -13,6 +13,7 @@
   "description": "",
   "dependencies": {
     "@clerk/express": "^1.7.1",
+    "@google/genai": "^1.28.0",
     "axios": "^1.10.0",
     "cloudinary": "^2.7.0",
     "cors": "^2.8.5",

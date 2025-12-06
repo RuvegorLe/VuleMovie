@@ -10,10 +10,13 @@ import bookingRouter from "./routes/bookingRoutes.js";
 import adminRouter from "./routes/adminRoutes.js";
 import userRouter from "./routes/userRoutes.js";
 import { stripeWebhooks } from "./controllers/stripeWebhooks.js";
+import movieRoutes from "./routes/movieRoutes.js";
+import chatRouter from "./routes/chatRoutes.js";
 
 const app = express();
 const port = 3000;
 
+const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
 await connectDB();
 
 // Stripe Webhooks Route
@@ -35,6 +38,9 @@ app.use("/api/show", showRouter);
 app.use("/api/booking", bookingRouter);
 app.use("/api/admin", adminRouter);
 app.use("/api/user", userRouter);
+app.use("/api/movies", movieRoutes);
+app.use("/api/chat", chatRouter);
+
 
 app.listen(port, () =>
   console.log(`Server listening at http://localhost:${port}`)

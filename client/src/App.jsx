@@ -16,8 +16,10 @@ import ListBookings from "./pages/admin/ListBookings";
 import { useAppContext } from "./context/AppContext";
 import { SignIn } from "@clerk/clerk-react";
 import Loading from "./components/Loading";
+import ManageMovies from "./pages/admin/ManageMovies";
+import ChatMoviesWidget from "./components/ChatMoviesWidget";
 
-const App = () => {
+const App = () => { 
   const isAdminRoute = useLocation().pathname.startsWith("/admin");
 
   const { user } = useAppContext();
@@ -25,6 +27,8 @@ const App = () => {
   return (
     <>
       <Toaster />
+      <ChatMoviesWidget  />
+
       {!isAdminRoute && <Navbar />}
       <Routes>
         <Route path="/" element={<Home />} />
@@ -52,8 +56,10 @@ const App = () => {
           <Route path="add-shows" element={<AddShows />} />
           <Route path="list-shows" element={<ListShows />} />
           <Route path="list-bookings" element={<ListBookings />} />
+          <Route path="movies" element={<ManageMovies />} />
         </Route>
       </Routes>
+
       {!isAdminRoute && <Footer />}
     </>
   );
