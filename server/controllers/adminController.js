@@ -38,7 +38,9 @@ export const getAllShows = async (req, res) => {
       .populate("movie")
       .sort({ showDateTime: 1 });
 
-    res.json({ success: true, shows });
+    const validShows = shows.filter(show => show.movie !== null);
+    
+    res.json({ success: true, shows: validShows });
   } catch (error) {
     console.error(error);
     res.json({ success: false, message: error.message });
@@ -52,11 +54,20 @@ export const getAllBookings = async (req, res) => {
       .populate("user")
       .populate({
         path: "show",
-        populate: { path: "movie" },
+        populate: { 
+          path: "movie",
+          model: "Movie",
+        },
       })
       .sort({ createdAt: -1 });
 
-    res.json({ success: true, bookings });
+    const validBookings = bookings.filter(booking => 
+        booking.user !== null && 
+        booking.show !== null &&
+        booking.show.movie !== null 
+    );
+
+    res.json({ success: true, bookings: validBookings});
   } catch (error) {
     console.error(error);
     res.json({ success: false, message: error.message });

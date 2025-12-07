@@ -94,7 +94,7 @@ const fetchMovies = async () => {
 
     setAddingShow(false);
   };
-
+  
   return movies.length === 0 ? (
     <Loading />
   ) : (

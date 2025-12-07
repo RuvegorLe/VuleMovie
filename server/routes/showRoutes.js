@@ -3,6 +3,8 @@ import {
   addShow,
   getShows,
   getShow,
+  deleteShow,
+  updateShow,
 } from "../controllers/showController.js";
 import { protectAdmin } from "../middleware/auth.js";
 
@@ -16,5 +18,11 @@ showRouter.get("/:movieId", getShow);
 
 // Thêm show mới (chỉ cho admin)
 showRouter.post("/add", protectAdmin, addShow);
+
+//Sửa show theo id (chỉ cho admin)
+showRouter.put("/:id", protectAdmin, updateShow);
+
+// Xoá show theo id (chỉ cho admin)
+showRouter.delete("/:id", protectAdmin, deleteShow);
 
 export default showRouter;

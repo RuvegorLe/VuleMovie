@@ -116,7 +116,7 @@ KHÔNG ĐƯỢC:
 // API chính: POST /api/chat/movies
 export const chatMovies = async (req, res) => {
   try {
-    const { message, top_k = 5 } = req.body || {};
+    const { message, top_k = 20 } = req.body || {};
     if (!message) return res.status(400).json({ message: "Missing 'message'" });
 
     // 1) Embed câu hỏi
@@ -134,7 +134,7 @@ export const chatMovies = async (req, res) => {
       .map(d => ({ score: cosine(qVec, d.embedding), doc: d }))
       .sort((a, b) => b.score - a.score);
 
-    const topHits = scored.slice(0, Math.min(+top_k, 20)).map(s => s.doc);
+    const topHits = scored.slice(0, Math.min(+top_k, 50)).map(s => s.doc);
 
     // 3) Build prompt
     const prompt = await buildPromptPieces(message, topHits);

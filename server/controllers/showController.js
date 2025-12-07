@@ -2,23 +2,27 @@ import axios from "axios";
 import Movie from "../models/Movie.js";
 import Show from "../models/Show.js";
 
-// Lấy tất cả show từ DB
+
 export const getShows = async (req, res) => {
   try {
     const shows = await Show.find({ showDateTime: { $gte: new Date() } })
       .populate("movie")
       .sort({ showDateTime: 1 });
 
-    // Lấy danh sách unique movies
+    // 🚨 BƯỚC SỬA 1: Lọc bỏ các show mà trường 'movie' là null
+    const validShows = shows.filter(show => show.movie !== null);
+
+    // Lấy danh sách unique movies từ các show hợp lệ
     const uniqueMovies = Array.from(
-      new Set(shows.map((show) => show.movie._id))
-    ).map((id) => shows.find((show) => show.movie._id === id).movie);
+    // BƯỚC SỬA 2: Lặp qua mảng đã lọc (validShows)
+      new Set(validShows.map((show) => show.movie._id.toString()))
+    ).map((id) => validShows.find((show) => show.movie._id.toString() === id).movie);
 
     res.json({ success: true, shows: uniqueMovies });
-  } catch (error) {
+    } catch (error) {
     console.error(error);
     res.json({ success: false, message: error.message });
-  }
+}
 };
 
 // Lấy thông tin 1 show theo movieId
@@ -81,5 +85,59 @@ if (!movie) {
   } catch (error) {
     console.error(error);
     res.json({ success: false, message: error.message });
+  }
+};
+
+// Chỉnh sửa show (chỉ admin)
+export const updateShow = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { showPrice, showDateTime } = req.body || {} ;
+
+        if (!showPrice && !showDateTime) {
+            return res.status(400).json({ success: false, message: "At least one field (showPrice or showDateTime) is required for update." });
+        }
+
+        const updateFields = {};
+        if (showPrice) updateFields.showPrice = showPrice;
+        if (showDateTime) updateFields.showDateTime = new Date(showDateTime);
+
+        const updatedShow = await Show.findByIdAndUpdate(
+            id,
+            updateFields,
+            { new: true } 
+        ).populate("movie"); 
+
+        if (!updatedShow) {
+            return res.status(404).json({ success: false, message: "Show not found." });
+        }
+
+        res.json({ success: true, message: "Show updated successfully.", show: updatedShow });
+
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ success: false, message: "Server error during show update." });
+    }
+};
+
+// Xoá show (chỉ admin)
+export const deleteShow = async (req, res) => {
+  try {
+    const { id } = req.params; 
+
+    if (!id) {
+      return res.status(400).json({ success: false, message: "Missing show ID" });
+    }
+
+    const result = await Show.findByIdAndDelete(id);
+
+    if (!result) {
+      return res.status(404).json({ success: false, message: "Show not found" });
+    }
+
+    res.json({ success: true, message: "Show deleted successfully." });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ success: false, message: "Server error during show deletion." });
   }
 };

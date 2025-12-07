@@ -14,26 +14,43 @@ export const getMovies = async (req, res) => {
   }
 };
 
+
 export const addMovie = async (req, res) => {
   try {
-    const movieData = req.body;
+    const { _id } = req.body; 
 
-    // kiểm tra trùng
-    const existing = await Movie.findById(movieData._id);
+    if (!_id) return res.status(400).json({ message: "Missing TMDB ID" });
+
+    const existing = await Movie.findById(_id);
     if (existing) return res.status(400).json({ message: "Movie already exists" });
 
-    // Ghép nội dung có nhãn để giữ ngữ cảnh tốt hơn
-    const textToEmbed = [
-      `title: ${movieData.title || ""}`,
-      movieData.tagline ? `tagline: ${movieData.tagline}` : "",
-      `overview: ${movieData.overview || ""}`,
-      movieData.language ? `language: ${movieData.language}` : "",
-      movieData.release_date ? `release_date: ${movieData.release_date}` : "",
-      movieData.vote_average ? `vote_average: ${movieData.vote_average}` : "",
-      ...(movieData.genres || []).map(g => `genre: ${g.name ?? g.id ?? ""}`),
-      ...(movieData.casts || []).map(c => `cast: ${c.name ?? ""}`)
-    ].filter(Boolean).join("\n");
+    const { data: details } = await axios.get(
+        `https://api.themoviedb.org/3/movie/${_id}?append_to_response=credits`,
+        { headers: { Authorization: `Bearer ${process.env.TMDB_API_KEY}` } }
+    );
+    
+    // 3. Chuẩn bị dữ liệu để lưu vào DB
+    const movieData = {
+        _id: _id,
+        title: details.title,
+        overview: details.overview || "",
+        poster_path: details.poster_path,
+        backdrop_path: details.backdrop_path || "",
+        release_date: details.release_date || "",
+        original_language: details.original_language || "en",
+        tagline: details.tagline || "",
+        vote_average: details.vote_average || 0,
+        runtime: details.runtime || 0, 
+        
+        genres: (details.genres || []).map(g => ({ id: g.id, name: g.name })),
+        
+        casts: (details.credits?.cast || [])
+            .slice(0, 10) 
+            .map(c => ({ id: c.id, name: c.name, character: c.character })) 
+    };
 
+    // 4. Tạo Embedding
+    const textToEmbed = buildEmbeddingText(movieData); // Cần đảm bảo buildEmbeddingText xử lý cấu trúc mới này
     const embedding = await createEmbedding(textToEmbed);
     movieData.embedding = embedding;
 
@@ -44,7 +61,6 @@ export const addMovie = async (req, res) => {
     res.status(500).json({ message: "Error adding movie" });
   }
 };
-
 
 // Cập nhật phim
 export const updateMovie = async (req, res) => {
